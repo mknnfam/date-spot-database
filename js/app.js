@@ -344,7 +344,7 @@ const App = {
             }
 
             function submitPin() {
-                if (entered === correctPin) {
+                if (entered.toUpperCase() === correctPin.toUpperCase()) {
                     sessionStorage.setItem('ds-unlocked', 'true');
                     screen.classList.add('opacity-0');
                     setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
@@ -383,7 +383,7 @@ const App = {
                     renderDisplay();
                 } else if (key.length === 1 && /^[a-zA-Z0-9]$/.test(key)) {
                     e.preventDefault();
-                    addChar(key.toUpperCase());
+                    addChar(key);
                 }
             });
 
