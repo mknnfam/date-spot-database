@@ -65,6 +65,11 @@ function doPost(e) {
     const body = JSON.parse(e.postData.contents);
     const sheet = getSheet();
 
+    /* Handle delete action */
+    if (body._action === 'delete') {
+      return doDeleteInternal(sheet, body.id);
+    }
+
     const location = {
       id: generateId(),
       name: body.name || '',
@@ -127,15 +132,20 @@ function doDelete(e) {
     if (!id) return respond({ error: 'Missing ?id=' }, 400);
 
     const sheet = getSheet();
-    const data = sheet.getDataRange().getValues();
-    const rows = rowsToObjects(data);
-
-    const idx = rows.findIndex(r => r.id === id);
-    if (idx === -1) return respond({ error: 'Not found' }, 404);
-
-    sheet.deleteRow(idx + 2);
-    return respond({ deleted: id });
+    return doDeleteInternal(sheet, id);
   });
+}
+
+/* Internal delete helper (shared between doDelete and doPost action) */
+function doDeleteInternal(sheet, id) {
+  const data = sheet.getDataRange().getValues();
+  const rows = rowsToObjects(data);
+
+  const idx = rows.findIndex(r => r.id === id);
+  if (idx === -1) return respond({ error: 'Not found' }, 404);
+
+  sheet.deleteRow(idx + 2);
+  return respond({ deleted: id });
 }
 
 /* ==========================================

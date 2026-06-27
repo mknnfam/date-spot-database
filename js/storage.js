@@ -79,7 +79,7 @@ const Storage = {
 
     /* ---- Delete a location (API + cache) ---- */
     async remove(id) {
-        const result = await this._apiCall('DELETE', null, { id });
+        const result = await this._apiCall('POST', { _action: 'delete', id });
         if (!result) throw new Error('Failed to delete from Google Sheets');
 
         const list = this._fromCache().filter(l => l.id !== id);
