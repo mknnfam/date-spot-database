@@ -22,7 +22,7 @@ const CONFIG = {
   /* Set a secret token so only YOUR web app can write.
      Generate one: open browser console and type: crypto.randomUUID()
      Then put the same token in js/config.js on your web app. */
-  API_TOKEN: 'change-me-to-a-random-uuid',
+  API_TOKEN: 'ds-d158f1b7',
 
   /* Sheet name (tab at the bottom of your Google Sheet) */
   SHEET_NAME: 'DateSpots'

@@ -6,10 +6,10 @@ const CONFIG = {
     /* ---- Google Sheets API ---- */
 
     /* Your Apps Script Web App URL (paste after deployment) */
-    APP_SCRIPT_URL: 'YOUR_APPS_SCRIPT_URL_HERE',
+    APP_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx0tE3DDSnbfMO9REp4GmcKh2EhLtm-SAZvnl2-XY7MCcSaCUidYNNF0mkenyQGBdMrhw/exec',
 
     /* Secret token shared between web app and Apps Script */
-    API_TOKEN: 'YOUR_API_TOKEN_HERE',
+    API_TOKEN: 'ds-d158f1b7',
 
     /* ---- Access PIN ---- */
 
