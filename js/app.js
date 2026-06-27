@@ -242,13 +242,17 @@ const App = {
         this._renderStats();
     },
 
-    /* ---- PIN Lock Screen ---- */
+    /* ---- PIN Lock Screen (alphanumeric) ---- */
     _lockScreen() {
         return new Promise(resolve => {
             const screen = document.getElementById('lock-screen');
-            const dots = document.querySelectorAll('.pin-dot');
+            const display = document.getElementById('pin-display');
+            const padWrap = document.getElementById('pin-pad-wrap');
             const error = document.getElementById('pin-error');
             const msg = document.getElementById('lock-message');
+            const modeBtn = document.getElementById('pin-mode');
+            const backBtn = document.getElementById('pin-backspace');
+            const enterBtn = document.getElementById('pin-enter');
             const correctPin = String(CONFIG.ACCESS_PIN);
 
             msg.textContent = CONFIG.LOCK_MESSAGE || 'Enter PIN to access';
@@ -260,42 +264,116 @@ const App = {
             }
 
             let entered = '';
-            const maxLen = dots.length;
+            let isAlpha = false;
 
-            function updateDots() {
-                dots.forEach((dot, i) => {
-                    dot.classList.toggle('bg-red-500', i < entered.length);
-                    dot.classList.toggle('border-red-500', i < entered.length);
-                });
+            /* Numeric keypad layout (0-9 in phone layout) */
+            const NUM_KEYS = ['1','2','3','4','5','6','7','8','9','','0',''];
+
+            /* Alpha keypad layout (A-Z as 3-col rows) */
+            const ALPHA_ROWS = [
+                ['A','B','C','D','E','F','G','H','I'],
+                ['J','K','L','M','N','O','P','Q','R'],
+                ['S','T','U','V','W','X','Y','Z','']
+            ];
+
+            function buildPad(alpha) {
+                padWrap.innerHTML = '';
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-3 gap-2 max-w-[240px] mx-auto';
+
+                if (alpha) {
+                    ALPHA_ROWS.forEach(row => {
+                        row.forEach(ch => {
+                            if (!ch) {
+                                const d = document.createElement('div');
+                                grid.appendChild(d);
+                                return;
+                            }
+                            const btn = document.createElement('button');
+                            btn.className = 'pin-key w-full aspect-square rounded-2xl bg-gray-100 dark:bg-gray-700 text-lg font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all';
+                            btn.dataset.key = ch;
+                            btn.textContent = ch;
+                            btn.addEventListener('click', () => addChar(ch));
+                            grid.appendChild(btn);
+                        });
+                    });
+                } else {
+                    NUM_KEYS.forEach(k => {
+                        if (!k) {
+                            const d = document.createElement('div');
+                            grid.appendChild(d);
+                            return;
+                        }
+                        const btn = document.createElement('button');
+                        btn.className = 'pin-key w-full aspect-square rounded-2xl bg-gray-100 dark:bg-gray-700 text-2xl font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all';
+                        btn.dataset.key = k;
+                        btn.textContent = k;
+                        btn.addEventListener('click', () => addChar(k));
+                        grid.appendChild(btn);
+                    });
+                }
+                padWrap.appendChild(grid);
             }
 
-            document.querySelectorAll('.pin-key').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (entered.length >= maxLen) return;
-                    entered += btn.dataset.key;
-                    updateDots();
-                    error.classList.add('hidden');
-
-                    if (entered.length === maxLen) {
-                        if (entered === correctPin) {
-                            sessionStorage.setItem('ds-unlocked', 'true');
-                            screen.classList.add('opacity-0');
-                            setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
-                        } else {
-                            error.classList.remove('hidden');
-                            entered = '';
-                            setTimeout(updateDots, 100);
-                        }
+            function renderDisplay() {
+                display.innerHTML = '';
+                /* Show up to 12 chars max */
+                const max = Math.max(correctPin.length, 8);
+                for (let i = 0; i < max; i++) {
+                    const box = document.createElement('span');
+                    box.className = 'inline-flex items-center justify-center w-8 h-10 rounded-lg border-2 text-lg font-mono font-bold transition-all duration-150';
+                    if (i < entered.length) {
+                        box.className += ' bg-red-100 dark:bg-red-900 border-red-400 dark:border-red-500 text-red-600 dark:text-red-300';
+                        box.textContent = entered[i];
+                    } else if (i === entered.length) {
+                        box.className += ' border-red-400 dark:border-red-500 bg-white dark:bg-gray-700 animate-pulse';
+                        box.textContent = '_';
+                    } else {
+                        box.className += ' border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700';
+                        box.textContent = '';
                     }
-                });
-            });
+                    display.appendChild(box);
+                }
+            }
 
-            document.getElementById('pin-backspace').addEventListener('click', () => {
-                entered = entered.slice(0, -1);
-                updateDots();
+            function addChar(ch) {
+                if (entered.length >= 12) return;
+                entered += ch;
                 error.classList.add('hidden');
+                renderDisplay();
+            }
+
+            function submitPin() {
+                if (entered === correctPin) {
+                    sessionStorage.setItem('ds-unlocked', 'true');
+                    screen.classList.add('opacity-0');
+                    setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
+                } else {
+                    error.classList.remove('hidden');
+                    entered = '';
+                    renderDisplay();
+                }
+            }
+
+            /* Event listeners */
+            backBtn.addEventListener('click', () => {
+                entered = entered.slice(0, -1);
+                error.classList.add('hidden');
+                renderDisplay();
             });
 
+            enterBtn.addEventListener('click', submitPin);
+
+            modeBtn.addEventListener('click', () => {
+                isAlpha = !isAlpha;
+                modeBtn.textContent = isAlpha ? '123' : 'ABC';
+                buildPad(isAlpha);
+            });
+
+            /* Init */
+            buildPad(false);
+            renderDisplay();
+            error.classList.add('hidden');
             screen.style.display = 'flex';
             screen.classList.remove('opacity-0');
         });
