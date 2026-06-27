@@ -25,10 +25,14 @@ const Storage = {
 
         this._loading = this._fetchAll();
         try {
-            await this._loading;
+            const data = await this._loading;
+            if (data && Array.isArray(data) && data.length > 0) {
+                this._toCache(data);
+            }
         } finally {
             this._loading = null;
         }
+        this._ready = true;
     },
 
     /* ---- Get all locations (from cache, fast) ---- */
