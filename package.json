@@ -1,0 +1,16 @@
+{
+  "name": "date-spot-database",
+  "version": "1.0.0",
+  "description": "Interactive date location planner with map view",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . -l 8080 --no-clipboard",
+    "start": "npx serve . -l 8080 --no-clipboard"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "keywords": ["date", "map", "planner"],
+  "author": "",
+  "license": "MIT"
+}
