@@ -1,0 +1,148 @@
+/* ============================================
+   Date Spot Database — Custom Styles
+   ============================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #app { height: 100%; width: 100%; }
+
+#map { z-index: 10; }
+
+/* ---- Tab buttons (top nav) ---- */
+.tab-btn {
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tab-btn.active { background-color: #ef4444; color: white; }
+.tab-btn:not(.active) { opacity: 0.75; }
+.tab-btn:hover { opacity: 1; }
+
+/* ---- Bottom nav (mobile) ---- */
+.bottom-tab { transition: color 0.2s; }
+.bottom-tab.active { color: #ef4444; }
+
+/* ---- Place cards ---- */
+.location-card {
+    border-left: 4px solid #ef4444;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.location-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+}
+
+/* ---- Star rating ---- */
+.star-rating { display: inline-flex; gap: 2px; }
+.star-rating .star {
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.15s, transform 0.15s;
+    user-select: none;
+}
+.star-rating .star.active,
+.star-rating .star:hover,
+.star-rating .star:hover ~ .star { color: #f59e0b; }
+.star-rating .star:hover { transform: scale(1.2); }
+
+/* ---- Vibe tags ---- */
+.vibe-tag.selected {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+.dark .vibe-tag.selected {
+    border-color: #f87171;
+    background-color: #451a1a;
+    color: #fca5a5;
+}
+
+/* ---- Stat cards ---- */
+.stat-card { transition: transform 0.2s; }
+.stat-card:hover { transform: translateY(-2px); }
+
+/* ---- Leaflet overrides ---- */
+.leaflet-popup-content-wrapper { border-radius: 12px !important; }
+.leaflet-popup-content { margin: 12px 16px !important; }
+
+/* ---- Loading spinner ---- */
+.spinner { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+
+/* ---- Toast notifications ---- */
+#toast-container {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: calc(100% - 32px);
+    max-width: 400px;
+}
+.toast {
+    pointer-events: auto;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 3.7s forwards;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.toast-success { background: #059669; color: white; }
+.toast-error { background: #dc2626; color: white; }
+.toast-info { background: #2563eb; color: white; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+/* ---- Confirm dialog ---- */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+}
+.confirm-box {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 360px;
+    width: calc(100% - 32px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.dark .confirm-box { background: #1f2937; color: #f3f4f6; }
+.confirm-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.confirm-box p { font-size: 0.9rem; color: #6b7280; margin-bottom: 16px; }
+.dark .confirm-box p { color: #9ca3af; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.confirm-actions button {
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.confirm-actions .btn-cancel { background: #e5e7eb; color: #374151; }
+.dark .confirm-actions .btn-cancel { background: #374151; color: #d1d5db; }
+.confirm-actions .btn-confirm { background: #ef4444; color: white; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
