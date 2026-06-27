@@ -196,10 +196,10 @@ const App = {
             /* Edit button */
             card.querySelector('.edit-loc-btn')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const loc = Storage.get(loc.id);
-                if (loc) {
+                const locData = Storage.get(loc.id);
+                if (locData) {
                     this.switchTab('add');
-                    FormManager.editLocation(loc);
+                    FormManager.editLocation(locData);
                 }
             });
 

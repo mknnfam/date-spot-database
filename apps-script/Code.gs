@@ -70,6 +70,11 @@ function doPost(e) {
       return doDeleteInternal(sheet, body.id);
     }
 
+    /* Handle update action */
+    if (body._action === 'update') {
+      return doUpdateInternal(sheet, body);
+    }
+
     const location = {
       id: generateId(),
       name: body.name || '',
@@ -146,6 +151,25 @@ function doDeleteInternal(sheet, id) {
 
   sheet.deleteRow(idx + 2);
   return respond({ deleted: id });
+}
+
+/* Internal update helper (via doPost _action: 'update') */
+function doUpdateInternal(sheet, body) {
+  const data = sheet.getDataRange().getValues();
+  const rows = rowsToObjects(data);
+
+  const idx = rows.findIndex(r => r.id === body.id);
+  if (idx === -1) return respond({ error: 'Not found' }, 404);
+
+  const updated = { ...rows[idx], ...body, dateModified: new Date().toISOString() };
+  delete updated._action;
+
+  const rowNum = idx + 2;
+  HEADERS.forEach((h, col) => {
+    sheet.getRange(rowNum, col + 1).setValue(updated[h] !== undefined ? updated[h] : '');
+  });
+
+  return respond(updated);
 }
 
 /* ==========================================

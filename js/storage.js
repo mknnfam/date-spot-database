@@ -65,7 +65,7 @@ const Storage = {
 
     /* ---- Update a location (API + cache) ---- */
     async update(id, data) {
-        const result = await this._apiCall('PUT', { id, ...data });
+        const result = await this._apiCall('POST', { _action: 'update', id, ...data });
         if (!result) throw new Error('Failed to update in Google Sheets');
 
         const list = this._fromCache();
