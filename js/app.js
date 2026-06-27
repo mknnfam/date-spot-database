@@ -405,6 +405,29 @@ const App = {
             error.classList.add('hidden');
             screen.style.display = 'flex';
             screen.classList.remove('opacity-0');
+
+            /* Auto-focus hidden input for mobile keyboard */
+            const hiddenInput = document.getElementById('pin-hidden-input');
+            if (hiddenInput) {
+                /* Focus after a short delay (mobile needs user gesture context) */
+                setTimeout(() => hiddenInput.focus(), 300);
+
+                /* Tap on display area → focus input */
+                display.addEventListener('click', () => hiddenInput.focus());
+
+                /* Also handle input event (for mobile virtual keyboards) */
+                hiddenInput.addEventListener('input', function _onInput() {
+                    const val = this.value.replace(/[^a-zA-Z0-9]/g, '');
+                    if (val.length > 0) {
+                        /* Process each new character */
+                        const newChars = val.slice(entered.length);
+                        for (const ch of newChars) {
+                            if (entered.length < 12) addChar(ch.toUpperCase());
+                        }
+                    }
+                    this.value = '';
+                });
+            }
         });
     }
 };

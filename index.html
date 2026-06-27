@@ -25,10 +25,14 @@
             <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Date Spot Database</h2>
             <p id="lock-message" class="text-gray-500 dark:text-gray-400 text-sm mb-4"></p>
 
-            <!-- PIN display: shows each entered char in a box -->
-            <div id="pin-display" class="flex justify-center gap-2 mb-4 min-h-[48px] flex-wrap">
+            <!-- PIN display: shows each entered char in a box (tap to type) -->
+            <div id="pin-display" class="flex justify-center gap-2 mb-4 min-h-[48px] flex-wrap cursor-text">
                 <!-- built dynamically by JS -->
             </div>
+            <!-- Hidden input to trigger mobile keyboard -->
+            <input type="text" id="pin-hidden-input"
+                class="absolute opacity-0 pointer-events-none" style="width:1px;height:1px;left:-9999px;"
+                inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
             <!-- Keypad -->
             <div id="pin-pad-wrap">
