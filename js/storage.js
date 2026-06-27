@@ -105,6 +105,14 @@ const Storage = {
         Utils.toast('Exported successfully!');
     },
 
+    /* ---- Import file (JSON or CSV) ---- */
+    async importFile(file) {
+        if (file.name.endsWith('.csv')) {
+            return this.importCSV(file);
+        }
+        return this.importJSON(file);
+    },
+
     /* ---- Import JSON into API ---- */
     async importJSON(file) {
         const text = await file.text();
@@ -143,6 +151,110 @@ const Storage = {
         await this.refresh();
         Utils.toast(`✅ Imported ${count}/${data.length} locations!`);
         if (typeof App !== 'undefined') App.refreshAll();
+    },
+
+    /* ---- Import CSV with column mapping ---- */
+    async importCSV(file) {
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+
+        if (lines.length < 2) {
+            Utils.toast('CSV file has no data rows', 'error');
+            return;
+        }
+
+        const headers = this._parseCSVLine(lines[0]);
+
+        const confirmed = await Utils.confirm(
+            `Found ${lines.length - 1} rows in your CSV. This will ADD them to your Google Sheet.`,
+            'Import CSV?'
+        );
+        if (!confirmed) return;
+
+        /* Column name mapping (your Notion columns -> our field names) */
+        const columnMap = {
+            'name': 'name', 'Name': 'name',
+            'address': 'address', 'Location': 'address',
+            'area': 'area', 'Area': 'area',
+            'category': 'category', 'Category': 'category',
+            'price': 'price', 'Price': 'price', 'Price Range': 'price',
+            'openinghours': 'openingHours', 'Opening Hours': 'openingHours',
+            'besttime': 'bestTime', 'Best Time': 'bestTime',
+            'vibe': 'vibe', 'Vibe': 'vibe',
+            'crowdlevel': 'crowdLevel', 'Crowd Level': 'crowdLevel',
+            'privacy': 'privacyLevel', 'Privacy': 'privacy', 'Privacy Level': 'privacyLevel',
+            'effortlevel': 'effortLevel', 'Effort Level': 'effortLevel',
+            'yourrating': 'yourRating', 'Your Rating': 'yourRating',
+            'herrating': 'herRating', 'Her Rating': 'herRating',
+            'url': 'url', 'URL': 'url',
+            'status': 'status', 'Status': 'status',
+            'notes': 'notes', 'Notes': 'notes',
+            'date': 'dateAdded', 'Date': 'dateAdded', 'Date Added': 'dateAdded',
+            'photoslink': 'photosLink', 'google photos link': 'photosLink', 'Photos Link': 'photosLink',
+            'couldrevisit': 'couldRevisit', 'Could Revisit': 'couldRevisit',
+            'lat': 'lat', 'Lat': 'lat', 'latitude': 'lat',
+            'lng': 'lng', 'Lng': 'lng', 'longitude': 'lng', 'lon': 'lng',
+            'rating': 'yourRating',
+            'location': 'address',
+            'google maps link': 'googleMapsLink',
+            'opening hours': 'openingHours',
+            'best time': 'bestTime',
+            'crowd level': 'crowdLevel',
+            'privacy level': 'privacyLevel',
+            'effort level': 'effortLevel',
+            'your rating': 'yourRating',
+            'her rating': 'herRating',
+            'could revisit': 'couldRevisit',
+            'date added': 'dateAdded',
+            'date visited': 'dateVisited',
+            'date': 'dateAdded'
+        };
+
+        let count = 0;
+        for (let i = 1; i < lines.length; i++) {
+            const values = this._parseCSVLine(lines[i]);
+            const row = {};
+            headers.forEach((h, idx) => {
+                const mappedKey = columnMap[h.trim()] || h.trim();
+                row[mappedKey] = (values[idx] || '').trim();
+            });
+
+            /* Skip empty rows */
+            if (!row.name && !row.address) continue;
+
+            /* Convert numeric fields */
+            if (row.yourRating) row.yourRating = parseFloat(row.yourRating) || 0;
+            if (row.herRating) row.herRating = parseFloat(row.herRating) || 0;
+            if (row.crowdLevel) row.crowdLevel = parseInt(row.crowdLevel) || 50;
+            if (row.privacyLevel) row.privacyLevel = parseInt(row.privacyLevel) || 50;
+            if (row.couldRevisit) row.couldRevisit = row.couldRevisit.toLowerCase() === 'yes' || row.couldRevisit === 'true';
+
+            try {
+                const result = await this.add(row);
+                if (result) count++;
+            } catch (err) {
+                console.error('CSV import row error:', i, err);
+            }
+        }
+
+        await this.refresh();
+        Utils.toast(`✅ Imported ${count}/${lines.length - 1} locations from CSV!`);
+        if (typeof App !== 'undefined') App.refreshAll();
+    },
+
+    /* ---- Simple CSV line parser (handles quoted fields) ---- */
+    _parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') { inQuotes = !inQuotes; continue; }
+            if (ch === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+            current += ch;
+        }
+        result.push(current);
+        return result;
     },
 
     /* ---- Stats (from cache) ---- */

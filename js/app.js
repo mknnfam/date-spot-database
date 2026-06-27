@@ -8,6 +8,11 @@ const App = {
     async init() {
         console.log('❤ Date Spot Database initializing...');
 
+        /* PIN gate — block app until PIN is entered */
+        if (CONFIG.ACCESS_PIN && CONFIG.ACCESS_PIN.length > 0) {
+            await this._lockScreen();
+        }
+
         /* Load data from Google Sheets first */
         try {
             await Storage.init();
@@ -44,7 +49,7 @@ const App = {
             document.getElementById('import-file').click();
         });
         document.getElementById('import-file').addEventListener('change', (e) => {
-            if (e.target.files[0]) Storage.importJSON(e.target.files[0]);
+            if (e.target.files[0]) Storage.importFile(e.target.files[0]);
             e.target.value = '';
         });
 
@@ -235,6 +240,65 @@ const App = {
     refreshAll() {
         this._renderList();
         this._renderStats();
+    },
+
+    /* ---- PIN Lock Screen ---- */
+    _lockScreen() {
+        return new Promise(resolve => {
+            const screen = document.getElementById('lock-screen');
+            const dots = document.querySelectorAll('.pin-dot');
+            const error = document.getElementById('pin-error');
+            const msg = document.getElementById('lock-message');
+            const correctPin = String(CONFIG.ACCESS_PIN);
+
+            msg.textContent = CONFIG.LOCK_MESSAGE || 'Enter PIN to access';
+
+            if (sessionStorage.getItem('ds-unlocked') === 'true') {
+                screen.classList.add('opacity-0');
+                setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
+                return;
+            }
+
+            let entered = '';
+            const maxLen = dots.length;
+
+            function updateDots() {
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('bg-red-500', i < entered.length);
+                    dot.classList.toggle('border-red-500', i < entered.length);
+                });
+            }
+
+            document.querySelectorAll('.pin-key').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (entered.length >= maxLen) return;
+                    entered += btn.dataset.key;
+                    updateDots();
+                    error.classList.add('hidden');
+
+                    if (entered.length === maxLen) {
+                        if (entered === correctPin) {
+                            sessionStorage.setItem('ds-unlocked', 'true');
+                            screen.classList.add('opacity-0');
+                            setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
+                        } else {
+                            error.classList.remove('hidden');
+                            entered = '';
+                            setTimeout(updateDots, 100);
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('pin-backspace').addEventListener('click', () => {
+                entered = entered.slice(0, -1);
+                updateDots();
+                error.classList.add('hidden');
+            });
+
+            screen.style.display = 'flex';
+            screen.classList.remove('opacity-0');
+        });
     }
 };
 

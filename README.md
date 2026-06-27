@@ -19,6 +19,18 @@ Web App (HTML/JS) → Google Apps Script API → Google Sheets
 
 ## Setup (15 minutes)
 
+### Step 0: Set your PIN (before deploying)
+
+Open `js/config.js` and change the PIN:
+
+```js
+ACCESS_PIN: '1234',   // Change this to any 4-digit number
+LOCK_MESSAGE: 'Enter PIN to access'  // Optional message on lock screen
+```
+
+Your wife just needs to know the same PIN. Anyone else hitting the URL sees a locked screen.
+Set `ACCESS_PIN: ''` to disable the lock.
+
 ### Step 1: Create the Google Sheet
 
 1. Go to [sheets.new](https://sheets.new)
@@ -100,6 +112,8 @@ Then enable GitHub Pages in your repo settings.
 
 ## Features
 
+- **PIN access** — only people who know the PIN can use the app
+- **CSV import** — upload your Notion CSV export directly (column names auto-mapped)
 - **Add locations** — form with all fields (name, address, category, price, vibe, ratings, etc.)
 - **Interactive map** — Leaflet + OpenStreetMap with clustered markers
 - **List view** — search, filter by status/category, delete
