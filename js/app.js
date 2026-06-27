@@ -370,6 +370,23 @@ const App = {
                 buildPad(isAlpha);
             });
 
+            /* Keyboard input — type directly */
+            document.addEventListener('keydown', function _keyHandler(e) {
+                const key = e.key;
+                if (key === 'Enter') {
+                    e.preventDefault();
+                    submitPin();
+                } else if (key === 'Backspace') {
+                    e.preventDefault();
+                    entered = entered.slice(0, -1);
+                    error.classList.add('hidden');
+                    renderDisplay();
+                } else if (key.length === 1 && /^[a-zA-Z0-9]$/.test(key)) {
+                    e.preventDefault();
+                    addChar(key.toUpperCase());
+                }
+            });
+
             /* Init */
             buildPad(false);
             renderDisplay();
