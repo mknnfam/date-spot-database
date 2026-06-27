@@ -163,12 +163,13 @@ const App = {
                     ${loc.url ? `<a href="${s(loc.url)}" target="_blank" rel="noopener" class="text-xs text-blue-500 hover:underline">🔗 Website</a>` : ''}
                     ${loc.photosLink ? `<a href="${s(loc.photosLink)}" target="_blank" rel="noopener" class="text-xs text-blue-500 hover:underline">📸 Photos</a>` : ''}
                     <button class="text-xs text-red-500 hover:underline ml-auto delete-loc-btn" data-id="${loc.id}">🗑️ Delete</button>
+                    <button class="text-xs text-indigo-500 hover:underline edit-loc-btn" data-id="${loc.id}">✏️ Edit</button>
                 </div>
             `;
 
             /* Click card → fly to map */
             card.addEventListener('click', (e) => {
-                if (e.target.closest('a') || e.target.closest('.delete-loc-btn')) return;
+                if (e.target.closest('a') || e.target.closest('.delete-loc-btn') || e.target.closest('.edit-loc-btn')) return;
                 if (loc.lat && loc.lng) {
                     this.switchTab('map');
                     MapManager.flyTo(loc.lat, loc.lng);
@@ -189,6 +190,16 @@ const App = {
                     } catch (err) {
                         Utils.toast('Failed to delete from Google Sheets', 'error');
                     }
+                }
+            });
+
+            /* Edit button */
+            card.querySelector('.edit-loc-btn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const loc = Storage.get(loc.id);
+                if (loc) {
+                    this.switchTab('add');
+                    FormManager.editLocation(loc);
                 }
             });
 
@@ -236,10 +247,11 @@ const App = {
         }
     },
 
-    /* ---- Refresh list + stats after data change ---- */
+    /* ---- Refresh list + stats + map after data change ---- */
     refreshAll() {
         this._renderList();
         this._renderStats();
+        MapManager.reload();
     },
 
     /* ---- PIN Lock Screen (alphanumeric) ---- */

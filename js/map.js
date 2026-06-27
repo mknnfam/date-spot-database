@@ -135,6 +135,18 @@ const MapManager = {
         if (this.map) this.map.flyTo([lat, lng], 16, { duration: 1 });
     },
 
+    /* ---- Reload all markers from Storage ---- */
+    reload() {
+        /* Clear existing markers */
+        Object.keys(this.markers).forEach(id => {
+            this.markerCluster.removeLayer(this.markers[id]);
+            delete this.markers[id];
+        });
+        /* Re-add all from storage */
+        this._loadAll();
+        this.refresh();
+    },
+
     /* ---- Invalidate map size (on tab switch) ---- */
     refresh() {
         setTimeout(() => {

@@ -5,6 +5,7 @@
 const FormManager = {
     _geocoding: false,
     _lastCoords: null,
+    _editingId: null,    // set when editing an existing location
 
     init() {
         const form = document.getElementById('add-location-form');
@@ -58,24 +59,81 @@ const FormManager = {
             });
         });
 
-        /* Clear button */
+        /* ---- Clear / reset form ---- */
         document.querySelector('.clear-btn')?.addEventListener('click', () => {
-            form.reset();
-            document.getElementById('crowdValue').textContent = '50';
-            document.getElementById('privacyValue').textContent = '50';
-            this._lastCoords = null;
-            document.getElementById('geocode-status').classList.add('hidden');
-            /* Reset stars */
-            document.querySelectorAll('.star').forEach(s => {
-                s.textContent = '☆';
-                s.classList.remove('active');
-            });
-            /* Reset vibe */
-            document.querySelectorAll('.vibe-tag').forEach(t => t.classList.remove('selected'));
-            this._updateVibeHidden();
-            document.getElementById('f-lat').value = '';
-            document.getElementById('f-lng').value = '';
+            this._clearForm();
         });
+    },
+
+    /* ---- Fill form with existing location data for editing ---- */
+    editLocation(loc) {
+        this._editingId = loc.id;
+        this._clearForm();
+
+        document.getElementById('f-name').value = loc.name || '';
+        document.getElementById('f-address').value = loc.address || '';
+        document.getElementById('f-area').value = loc.area || '';
+        document.getElementById('f-category').value = loc.category || '';
+        document.getElementById('f-price').value = loc.price || '';
+        document.getElementById('f-hours').value = loc.openingHours || '';
+        document.getElementById('f-bestTime').value = loc.bestTime || '';
+        document.getElementById('f-effort').value = loc.effortLevel || '';
+        document.getElementById('f-vibe').value = loc.vibe || '';
+        document.getElementById('f-crowd').value = loc.crowdLevel || 50;
+        document.getElementById('crowdValue').textContent = loc.crowdLevel || 50;
+        document.getElementById('f-privacy').value = loc.privacyLevel || 50;
+        document.getElementById('privacyValue').textContent = loc.privacyLevel || 50;
+        document.getElementById('f-yourRating').value = loc.yourRating || 0;
+        document.getElementById('f-herRating').value = loc.herRating || 0;
+        document.getElementById('f-dateVisited').value = loc.dateVisited || '';
+        document.getElementById('f-url').value = loc.url || '';
+        document.getElementById('f-photosLink').value = loc.photosLink || '';
+        document.getElementById('f-status').value = loc.status || 'Want to Go ⁉';
+        document.getElementById('f-revisit').value = loc.couldRevisit === 'Yes' ? 'Yes' : 'No';
+        document.getElementById('f-notes').value = loc.notes || '';
+        document.getElementById('f-lat').value = loc.lat || '';
+        document.getElementById('f-lng').value = loc.lng || '';
+        this._lastCoords = (loc.lat && loc.lng) ? { lat: parseFloat(loc.lat), lng: parseFloat(loc.lng) } : null;
+
+        /* Restore star ratings */
+        document.querySelectorAll('.star-rating').forEach(container => {
+            const targetId = container.dataset.target;
+            const val = targetId === 'f-yourRating' ? (loc.yourRating || 0) : (loc.herRating || 0);
+            container.querySelectorAll('.star').forEach(s => {
+                const sv = parseInt(s.dataset.value);
+                s.classList.toggle('active', sv <= val);
+                s.textContent = sv <= val ? '★' : '☆';
+            });
+        });
+
+        /* Restore vibe tags */
+        const vibes = (loc.vibe || '').split(',').map(v => v.trim().toLowerCase());
+        document.querySelectorAll('.vibe-tag').forEach(tag => {
+            tag.classList.toggle('selected', vibes.includes(tag.dataset.value.toLowerCase()));
+        });
+
+        /* Update submit button text */
+        document.getElementById('submit-text').textContent = '✏️ Update Location';
+        Utils.toast(`Editing "${loc.name}"`, 'info');
+    },
+
+    _clearForm() {
+        const form = document.getElementById('add-location-form');
+        form.reset();
+        document.getElementById('crowdValue').textContent = '50';
+        document.getElementById('privacyValue').textContent = '50';
+        this._lastCoords = null;
+        this._editingId = null;
+        document.getElementById('geocode-status').classList.add('hidden');
+        document.querySelectorAll('.star').forEach(s => {
+            s.textContent = '☆';
+            s.classList.remove('active');
+        });
+        document.querySelectorAll('.vibe-tag').forEach(t => t.classList.remove('selected'));
+        this._updateVibeHidden();
+        document.getElementById('f-lat').value = '';
+        document.getElementById('f-lng').value = '';
+        document.getElementById('submit-text').textContent = 'Save Location ❤️';
     },
 
     _updateVibeHidden() {
@@ -167,37 +225,49 @@ const FormManager = {
                 return;
             }
 
-            const location = await Storage.add({
-                name, address, area, category, price,
-                openingHours: hours,
-                bestTime, effortLevel: effort,
-                vibe, crowdLevel: crowd, privacyLevel: privacy,
-                yourRating: yourR, herRating: herR,
-                dateVisited: dVisited || null,
-                url, photosLink: photos,
-                status, couldRevisit: revisit === 'Yes',
-                notes,
-                lat: coords.lat,
-                lng: coords.lng
-            });
+            let location;
+            if (this._editingId) {
+                /* ---- EDIT mode ---- */
+                location = await Storage.update(this._editingId, {
+                    name, address, area, category, price,
+                    openingHours: hours,
+                    bestTime, effortLevel: effort,
+                    vibe, crowdLevel: crowd, privacyLevel: privacy,
+                    yourRating: yourR, herRating: herR,
+                    dateVisited: dVisited || null,
+                    url, photosLink: photos,
+                    status, couldRevisit: revisit === 'Yes',
+                    notes,
+                    lat: coords.lat,
+                    lng: coords.lng
+                });
 
-            MapManager.addMarker(location);
+                MapManager.removeMarker(this._editingId);
+                MapManager.addMarker({ ...{name, address, category, yourRating: yourR, herRating: herR, lat: coords.lat, lng: coords.lng}, id: this._editingId });
+
+                Utils.toast(`✅ "${name}" updated!`);
+                this._editingId = null;
+            } else {
+                /* ---- ADD mode ---- */
+                location = await Storage.add({
+                    name, address, area, category, price,
+                    openingHours: hours,
+                    bestTime, effortLevel: effort,
+                    vibe, crowdLevel: crowd, privacyLevel: privacy,
+                    yourRating: yourR, herRating: herR,
+                    dateVisited: dVisited || null,
+                    url, photosLink: photos,
+                    status, couldRevisit: revisit === 'Yes',
+                    notes,
+                    lat: coords.lat,
+                    lng: coords.lng
+                });
+
+                MapManager.addMarker(location);
+                Utils.toast(`✅ "${name}" added!`);
+            }
 
             /* Reset form */
-            e.target.reset();
-            document.getElementById('crowdValue').textContent = '50';
-            document.getElementById('privacyValue').textContent = '50';
-            document.querySelectorAll('.star').forEach(s => {
-                s.textContent = '☆'; s.classList.remove('active');
-            });
-            document.querySelectorAll('.vibe-tag').forEach(t => t.classList.remove('selected'));
-            this._updateVibeHidden();
-            this._lastCoords = null;
-            document.getElementById('geocode-status').classList.add('hidden');
-            document.getElementById('f-lat').value = '';
-            document.getElementById('f-lng').value = '';
-
-            Utils.toast(`✅ "${name}" added!`);
 
             /* Refresh stats + list, then switch to map */
             if (typeof App !== 'undefined') App.refreshAll();
