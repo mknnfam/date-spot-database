@@ -129,7 +129,7 @@ const FormManager = {
 
             const lookupUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:8080/api/ai-lookup'
-                : 'https://6819341f14ea.tail9f46bb.ts.net:8080/api/ai-lookup';
+                : 'https://command-center-xcd.pages.dev/api/ai-lookup';
 
             fetch(lookupUrl, {
                 method: 'POST',
