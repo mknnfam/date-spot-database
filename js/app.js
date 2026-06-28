@@ -1,5 +1,5 @@
 /* ============================================
-   App — Main orchestration
+   App — Main orchestration (Liquid Glass UI)
    ============================================ */
 
 const App = {
@@ -19,7 +19,6 @@ const App = {
             console.log(`Loaded ${Storage.getAll().length} locations from Google Sheets`);
         } catch (err) {
             console.warn('Could not reach Google Sheets, using local cache:', err.message);
-            /* Storage.getAll() will fall back to cache */
         }
 
         /* Init modules */
@@ -27,7 +26,7 @@ const App = {
         FormManager.init();
 
         /* Wire tab buttons (top nav) */
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
 
@@ -53,18 +52,13 @@ const App = {
             e.target.value = '';
         });
 
-        /* Dark mode toggle */
+        /* Dark mode toggle (kept for compatibility — always dark now, but toggle works) */
         const darkToggle = document.getElementById('dark-toggle');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const saved = localStorage.getItem('ds-dark-mode');
-        if (saved === 'true' || (saved === null && prefersDark)) {
-            document.documentElement.classList.add('dark');
-            darkToggle.textContent = '☀️';
-        }
+        darkToggle.textContent = '🌙';
         darkToggle.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('ds-dark-mode', isDark);
-            darkToggle.textContent = isDark ? '☀️' : '🌙';
+            darkToggle.textContent = isDark ? '🌙' : '☀️';
         });
 
         /* Initial render */
@@ -79,25 +73,19 @@ const App = {
         this.currentTab = tab;
 
         /* Hide all content panels */
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
         /* Show target */
         const panel = document.getElementById(`${tab}-view`);
-        if (panel) panel.classList.remove('hidden');
+        if (panel) {
+            panel.classList.remove('hidden');
+            panel.classList.add('active');
+        }
 
         /* Update top nav */
-        document.querySelectorAll('.tab-btn').forEach(b => {
+        document.querySelectorAll('.nav-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.tab === tab);
-            if (b.dataset.tab === tab) {
-                b.className = 'tab-btn active px-5 py-2.5 rounded-lg bg-red-500 text-white font-semibold text-sm transition-all';
-            } else {
-                const base = 'tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all';
-                b.className = b.classList.contains('bg-green-500')
-                    ? `${base} bg-green-500 text-white`
-                    : b.classList.contains('bg-purple-500')
-                    ? `${base} bg-purple-500 text-white`
-                    : `${base} bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200`;
-            }
         });
 
         /* Update bottom nav */
@@ -146,30 +134,30 @@ const App = {
             const dist = uLoc ? Utils.calculateDistance(uLoc.lat, uLoc.lng, loc.lat || 0, loc.lng || 0) : null;
 
             const card = document.createElement('div');
-            card.className = 'location-card bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 border-l-4 border-red-500';
+            card.className = 'location-card';
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
+                <div class="card-header">
                     <div>
-                        <h3 class="font-bold text-gray-900 dark:text-gray-100">${s(loc.name)}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">${s(loc.category || '')}</p>
+                        <h3 class="card-name">${s(loc.name)}</h3>
+                        <p class="card-category">${s(loc.category || '')}</p>
                     </div>
-                    <span class="text-lg">${loc.status === 'Favorites ⭐' ? '⭐' : loc.status === 'Been There ✅' ? '✅' : '⁉'}</span>
+                    <span class="card-status-badge">${loc.status === 'Favorites ⭐' ? '⭐' : loc.status === 'Been There ✅' ? '✅' : '⁉'}</span>
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 mb-3 space-y-0.5">
+                <div class="card-details">
                     <p>📍 ${s(loc.area || 'N/A')} ${dist ? `· ${dist} km` : ''}</p>
                     <p>💰 ${s(loc.price || 'N/A')} ${loc.yourRating ? `· ⭐ ${loc.yourRating}` : ''}</p>
                 </div>
-                <div class="flex gap-2 flex-wrap">
-                    ${loc.url ? `<a href="${s(loc.url)}" target="_blank" rel="noopener" class="text-xs text-blue-500 hover:underline">🔗 Website</a>` : ''}
-                    ${loc.photosLink ? `<a href="${s(loc.photosLink)}" target="_blank" rel="noopener" class="text-xs text-blue-500 hover:underline">📸 Photos</a>` : ''}
-                    <button class="text-xs text-red-500 hover:underline ml-auto delete-loc-btn" data-id="${loc.id}">🗑️ Delete</button>
-                    <button class="text-xs text-indigo-500 hover:underline edit-loc-btn" data-id="${loc.id}">✏️ Edit</button>
+                <div class="card-actions">
+                    ${loc.url ? `<a href="${s(loc.url)}" target="_blank" rel="noopener" class="card-link">🔗 Website</a>` : ''}
+                    ${loc.photosLink ? `<a href="${s(loc.photosLink)}" target="_blank" rel="noopener" class="card-link">📸 Photos</a>` : ''}
+                    <button class="card-action-btn edit-btn" data-id="${loc.id}">✏️ Edit</button>
+                    <button class="card-action-btn delete-btn" data-id="${loc.id}">🗑️ Delete</button>
                 </div>
             `;
 
             /* Click card → fly to map */
             card.addEventListener('click', (e) => {
-                if (e.target.closest('a') || e.target.closest('.delete-loc-btn') || e.target.closest('.edit-loc-btn')) return;
+                if (e.target.closest('a') || e.target.closest('.delete-btn') || e.target.closest('.edit-btn')) return;
                 if (loc.lat && loc.lng) {
                     this.switchTab('map');
                     MapManager.flyTo(loc.lat, loc.lng);
@@ -177,7 +165,7 @@ const App = {
             });
 
             /* Delete button */
-            card.querySelector('.delete-loc-btn')?.addEventListener('click', async (e) => {
+            card.querySelector('.delete-btn')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const confirmed = await Utils.confirm(`Delete "${loc.name}"?`, 'Delete Location');
                 if (confirmed) {
@@ -194,7 +182,7 @@ const App = {
             });
 
             /* Edit button */
-            card.querySelector('.edit-loc-btn')?.addEventListener('click', (e) => {
+            card.querySelector('.edit-btn')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const locData = Storage.get(loc.id);
                 if (locData) {
@@ -223,13 +211,14 @@ const App = {
         entries.forEach(([cat, count]) => {
             const pct = (count / maxCount) * 100;
             const bar = document.createElement('div');
+            bar.className = 'category-bar-wrap';
             bar.innerHTML = `
-                <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-700 dark:text-gray-300">${Utils.sanitize(cat)}</span>
-                    <span class="font-semibold text-gray-600 dark:text-gray-400">${count}</span>
+                <div class="category-bar-header">
+                    <span class="cat-name">${Utils.sanitize(cat)}</span>
+                    <span class="cat-count">${count}</span>
                 </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-3">
-                    <div class="bg-red-500 h-2.5 rounded-full transition-all duration-500" style="width:${pct}%"></div>
+                <div class="category-bar">
+                    <div class="category-bar-fill" style="width:${pct}%"></div>
                 </div>
             `;
             container.appendChild(bar);
@@ -254,7 +243,7 @@ const App = {
         MapManager.reload();
     },
 
-    /* ---- PIN Lock Screen (alphanumeric) ---- */
+    /* ---- PIN Lock Screen (alphanumeric) - Liquid Glass styled ---- */
     _lockScreen() {
         return new Promise(resolve => {
             const screen = document.getElementById('lock-screen');
@@ -270,18 +259,16 @@ const App = {
             msg.textContent = CONFIG.LOCK_MESSAGE || 'Enter PIN to access';
 
             if (sessionStorage.getItem('ds-unlocked') === 'true') {
-                screen.classList.add('opacity-0');
-                setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
+                screen.style.display = 'none';
+                resolve();
                 return;
             }
 
             let entered = '';
             let isAlpha = false;
 
-            /* Numeric keypad layout (0-9 in phone layout) */
             const NUM_KEYS = ['1','2','3','4','5','6','7','8','9','','0',''];
 
-            /* Alpha keypad layout (A-Z as 3-col rows) */
             const ALPHA_ROWS = [
                 ['A','B','C','D','E','F','G','H','I'],
                 ['J','K','L','M','N','O','P','Q','R'],
@@ -291,7 +278,7 @@ const App = {
             function buildPad(alpha) {
                 padWrap.innerHTML = '';
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-3 gap-2 max-w-[240px] mx-auto';
+                grid.className = 'pin-keypad';
 
                 if (alpha) {
                     ALPHA_ROWS.forEach(row => {
@@ -302,7 +289,7 @@ const App = {
                                 return;
                             }
                             const btn = document.createElement('button');
-                            btn.className = 'pin-key w-full aspect-square rounded-2xl bg-gray-100 dark:bg-gray-700 text-lg font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all';
+                            btn.className = 'pin-key';
                             btn.dataset.key = ch;
                             btn.textContent = ch;
                             btn.addEventListener('click', () => addChar(ch));
@@ -317,7 +304,7 @@ const App = {
                             return;
                         }
                         const btn = document.createElement('button');
-                        btn.className = 'pin-key w-full aspect-square rounded-2xl bg-gray-100 dark:bg-gray-700 text-2xl font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all';
+                        btn.className = 'pin-key num-key';
                         btn.dataset.key = k;
                         btn.textContent = k;
                         btn.addEventListener('click', () => addChar(k));
@@ -329,19 +316,18 @@ const App = {
 
             function renderDisplay() {
                 display.innerHTML = '';
-                /* Show up to 12 chars max */
                 const max = Math.max(correctPin.length, 8);
                 for (let i = 0; i < max; i++) {
                     const box = document.createElement('span');
-                    box.className = 'inline-flex items-center justify-center w-8 h-10 rounded-lg border-2 text-lg font-mono font-bold transition-all duration-150';
+                    box.className = 'pin-box';
                     if (i < entered.length) {
-                        box.className += ' bg-red-100 dark:bg-red-900 border-red-400 dark:border-red-500 text-red-600 dark:text-red-300';
+                        box.classList.add('filled');
                         box.textContent = entered[i];
                     } else if (i === entered.length) {
-                        box.className += ' border-red-400 dark:border-red-500 bg-white dark:bg-gray-700 animate-pulse';
+                        box.classList.add('cursor');
                         box.textContent = '_';
                     } else {
-                        box.className += ' border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700';
+                        box.classList.add('empty');
                         box.textContent = '';
                     }
                     display.appendChild(box);
@@ -351,26 +337,25 @@ const App = {
             function addChar(ch) {
                 if (entered.length >= 12) return;
                 entered += ch;
-                error.classList.add('hidden');
+                error.style.display = 'none';
                 renderDisplay();
             }
 
             function submitPin() {
                 if (entered.toUpperCase() === correctPin.toUpperCase()) {
                     sessionStorage.setItem('ds-unlocked', 'true');
-                    screen.classList.add('opacity-0');
-                    setTimeout(() => { screen.style.display = 'none'; resolve(); }, 400);
+                    screen.style.display = 'none';
+                    resolve();
                 } else {
-                    error.classList.remove('hidden');
+                    error.style.display = 'block';
                     entered = '';
                     renderDisplay();
                 }
             }
 
-            /* Event listeners */
             backBtn.addEventListener('click', () => {
                 entered = entered.slice(0, -1);
-                error.classList.add('hidden');
+                error.style.display = 'none';
                 renderDisplay();
             });
 
@@ -382,7 +367,6 @@ const App = {
                 buildPad(isAlpha);
             });
 
-            /* Keyboard input — type directly */
             document.addEventListener('keydown', function _keyHandler(e) {
                 const key = e.key;
                 if (key === 'Enter') {
@@ -391,7 +375,7 @@ const App = {
                 } else if (key === 'Backspace') {
                     e.preventDefault();
                     entered = entered.slice(0, -1);
-                    error.classList.add('hidden');
+                    error.style.display = 'none';
                     renderDisplay();
                 } else if (key.length === 1 && /^[a-zA-Z0-9]$/.test(key)) {
                     e.preventDefault();
@@ -399,27 +383,18 @@ const App = {
                 }
             });
 
-            /* Init */
             buildPad(false);
             renderDisplay();
-            error.classList.add('hidden');
+            error.style.display = 'none';
             screen.style.display = 'flex';
-            screen.classList.remove('opacity-0');
 
-            /* Auto-focus hidden input for mobile keyboard */
             const hiddenInput = document.getElementById('pin-hidden-input');
             if (hiddenInput) {
-                /* Focus after a short delay (mobile needs user gesture context) */
                 setTimeout(() => hiddenInput.focus(), 300);
-
-                /* Tap on display area → focus input */
                 display.addEventListener('click', () => hiddenInput.focus());
-
-                /* Also handle input event (for mobile virtual keyboards) */
                 hiddenInput.addEventListener('input', function _onInput() {
                     const val = this.value.replace(/[^a-zA-Z0-9]/g, '');
                     if (val.length > 0) {
-                        /* Process each new character */
                         const newChars = val.slice(entered.length);
                         for (const ch of newChars) {
                             if (entered.length < 12) addChar(ch.toUpperCase());

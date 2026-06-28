@@ -1,5 +1,6 @@
 /* ============================================
    Form — Add/edit location form management
+   Includes "Add with AI" feature
    ============================================ */
 
 const FormManager = {
@@ -40,7 +41,7 @@ const FormManager = {
                 star.addEventListener('mouseenter', () => {
                     const val = parseInt(star.dataset.value);
                     stars.forEach(s => {
-                        s.style.color = parseInt(s.dataset.value) <= val ? '#f59e0b' : '#d1d5db';
+                        s.style.color = parseInt(s.dataset.value) <= val ? '#f59e0b' : 'rgba(255,255,255,0.15)';
                     });
                 });
                 star.addEventListener('mouseleave', () => {
@@ -63,6 +64,199 @@ const FormManager = {
         document.querySelector('.clear-btn')?.addEventListener('click', () => {
             this._clearForm();
         });
+
+        /* ---- Add with AI button ---- */
+        document.getElementById('ai-add-btn')?.addEventListener('click', () => {
+            this._openAIModal();
+        });
+    },
+
+    /* ========== "Add with AI" Feature ========== */
+
+    _openAIModal() {
+        /* Remove any existing modal */
+        const existing = document.getElementById('ai-modal-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'ai-modal-overlay';
+        overlay.className = 'ai-modal-overlay';
+        overlay.innerHTML = `
+            <div class="ai-modal">
+                <div class="modal-title">
+                    <span>✨</span>
+                    <span>Add with AI</span>
+                </div>
+                <p class="modal-desc">Describe the place you want to add. AI will find the details and pre-fill the form.</p>
+                <div class="modal-input-wrap">
+                    <input type="text" id="ai-query-input" class="glass-input" placeholder='e.g., "cafe in Bangsar" or "romantic restaurant near KLCC"' autofocus>
+                </div>
+                <button id="ai-submit-btn" class="glass-btn glass-btn-primary" style="width:100%;padding:12px;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <span>✨ Look Up</span>
+                </button>
+                <div id="ai-loading" class="modal-loading hidden">
+                    <div class="iridescent-spinner" style="margin:0 auto;"></div>
+                    <p class="loading-text">Searching for place details...</p>
+                </div>
+                <div id="ai-error" class="hidden" style="margin-top:12px;padding:10px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:var(--radius-sm);color:var(--red);font-size:0.85rem;"></div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        /* Close on overlay click */
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+
+        /* Submit handler */
+        const submitBtn = document.getElementById('ai-submit-btn');
+        const queryInput = document.getElementById('ai-query-input');
+        const loading = document.getElementById('ai-loading');
+        const error = document.getElementById('ai-error');
+
+        function doLookup() {
+            const query = queryInput.value.trim();
+            if (!query) {
+                error.textContent = 'Please describe the place you want to add.';
+                error.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.classList.add('hidden');
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+
+            const lookupUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:8080/api/ai-lookup'
+                : 'https://6819341f14ea.tail9f46bb.ts.net:8080/api/ai-lookup';
+
+            fetch(lookupUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            })
+            .then(resp => {
+                if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+                return resp.json();
+            })
+            .then(data => {
+                overlay.remove();
+                if (data && data.name) {
+                    FormManager._fillFromAI(data);
+                } else {
+                    FormManager._fillFromAI(data);
+                    if (!data.name) {
+                        Utils.toast('AI found the area but not all details. Fill in the rest manually.', 'info');
+                    }
+                }
+            })
+            .catch(err => {
+                loading.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+                error.textContent = `Lookup failed: ${err.message}. Check that the AI server is running.`;
+                error.classList.remove('hidden');
+                console.error('AI lookup error:', err);
+            });
+        }
+
+        submitBtn.addEventListener('click', doLookup);
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                doLookup();
+            }
+        });
+
+        /* Focus input */
+        setTimeout(() => queryInput.focus(), 100);
+    },
+
+    _fillFromAI(data) {
+        /* Clear form first */
+        this._clearForm();
+
+        /* Switch to add tab */
+        if (typeof App !== 'undefined') App.switchTab('add');
+
+        /* Fill fields */
+        if (data.name) document.getElementById('f-name').value = data.name;
+        if (data.address) document.getElementById('f-address').value = data.address;
+        if (data.area) document.getElementById('f-area').value = data.area;
+        if (data.category) {
+            /* Try to match category to our options */
+            const catOptions = document.getElementById('f-category').options;
+            let matched = false;
+            for (let i = 0; i < catOptions.length; i++) {
+                if (catOptions[i].value.toLowerCase().includes(data.category.toLowerCase()) ||
+                    data.category.toLowerCase().includes(catOptions[i].value.toLowerCase())) {
+                    document.getElementById('f-category').value = catOptions[i].value;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                /* Use the value as-is if it contains an emoji prefix pattern */
+                document.getElementById('f-category').value = data.category;
+            }
+        }
+        if (data.price) document.getElementById('f-price').value = data.price;
+        if (data.openingHours) document.getElementById('f-hours').value = data.openingHours;
+        if (data.bestTime) document.getElementById('f-bestTime').value = data.bestTime;
+        if (data.effortLevel) document.getElementById('f-effort').value = data.effortLevel;
+
+        /* Vibe — try to match known tags */
+        if (data.vibe) {
+            const vibes = data.vibe.split(',').map(v => v.trim().toLowerCase());
+            document.querySelectorAll('.vibe-tag').forEach(tag => {
+                const tagVal = tag.dataset.value.toLowerCase();
+                const match = vibes.some(v => tagVal.includes(v) || v.includes(tagVal));
+                tag.classList.toggle('selected', match);
+            });
+            this._updateVibeHidden();
+        }
+
+        if (data.crowdLevel) {
+            const c = parseInt(data.crowdLevel);
+            if (!isNaN(c)) {
+                document.getElementById('f-crowd').value = c;
+                document.getElementById('crowdValue').textContent = c;
+            }
+        }
+        if (data.privacyLevel) {
+            const p = parseInt(data.privacyLevel);
+            if (!isNaN(p)) {
+                document.getElementById('f-privacy').value = p;
+                document.getElementById('privacyValue').textContent = p;
+            }
+        }
+
+        if (data.url) document.getElementById('f-url').value = data.url;
+        if (data.status) document.getElementById('f-status').value = data.status;
+        if (data.notes) document.getElementById('f-notes').value = data.notes;
+
+        /* Coordinates */
+        if (data.lat && data.lng) {
+            const lat = parseFloat(data.lat);
+            const lng = parseFloat(data.lng);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                document.getElementById('f-lat').value = lat;
+                document.getElementById('f-lng').value = lng;
+                this._lastCoords = { lat, lng };
+                const status = document.getElementById('geocode-status');
+                status.className = '';
+                status.style.cssText = 'font-size:0.72rem;margin-top:4px;color:var(--green);';
+                status.textContent = '✅ Location from AI';
+                status.classList.remove('hidden');
+            }
+        }
+
+        /* If no coordinates but we have an address, trigger geocode */
+        if (!data.lat && data.address) {
+            this._geocodeOnBlur();
+        }
+
+        Utils.toast('✨ AI details loaded! Review and save.', 'success');
     },
 
     /* ---- Fill form with existing location data for editing ---- */
@@ -124,10 +318,14 @@ const FormManager = {
         document.getElementById('privacyValue').textContent = '50';
         this._lastCoords = null;
         this._editingId = null;
-        document.getElementById('geocode-status').classList.add('hidden');
+        const geoStatus = document.getElementById('geocode-status');
+        geoStatus.classList.add('hidden');
+        geoStatus.textContent = '';
+        geoStatus.style.cssText = '';
         document.querySelectorAll('.star').forEach(s => {
             s.textContent = '☆';
             s.classList.remove('active');
+            s.style.color = '';
         });
         document.querySelectorAll('.vibe-tag').forEach(t => t.classList.remove('selected'));
         this._updateVibeHidden();
@@ -149,7 +347,8 @@ const FormManager = {
         if (!address) return;
 
         const status = document.getElementById('geocode-status');
-        status.className = 'text-xs mt-1 text-blue-500';
+        status.className = '';
+        status.style.cssText = 'font-size:0.72rem;margin-top:4px;color:var(--accent);';
         status.textContent = '🔍 Finding location...';
         status.classList.remove('hidden');
 
@@ -158,11 +357,11 @@ const FormManager = {
             this._lastCoords = coords;
             document.getElementById('f-lat').value = coords.lat;
             document.getElementById('f-lng').value = coords.lng;
-            status.className = 'text-xs mt-1 text-green-500';
+            status.style.cssText = 'font-size:0.72rem;margin-top:4px;color:var(--green);';
             status.textContent = '✅ Location found!';
         } else {
             this._lastCoords = null;
-            status.className = 'text-xs mt-1 text-red-500';
+            status.style.cssText = 'font-size:0.72rem;margin-top:4px;color:var(--red);';
             status.textContent = '⚠️ Could not find this address. Check spelling or be more specific.';
         }
     },
@@ -209,7 +408,8 @@ const FormManager = {
             let coords = this._lastCoords;
             if (!coords || document.getElementById('f-lat').value === '') {
                 const statusEl = document.getElementById('geocode-status');
-                statusEl.className = 'text-xs mt-1 text-blue-500';
+                statusEl.className = '';
+                statusEl.style.cssText = 'font-size:0.72rem;margin-top:4px;color:var(--accent);';
                 statusEl.textContent = '🔍 Geocoding address...';
                 statusEl.classList.remove('hidden');
                 coords = await Utils.geocodeAddress(address);
@@ -268,6 +468,7 @@ const FormManager = {
             }
 
             /* Reset form */
+            this._clearForm();
 
             /* Refresh stats + list, then switch to map */
             if (typeof App !== 'undefined') App.refreshAll();

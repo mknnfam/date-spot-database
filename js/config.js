@@ -13,11 +13,9 @@ const CONFIG = {
 
     /* ---- Access PIN ---- */
 
-    /* Simple PIN gate so only you & your wife can access the app.
-       Change this to any 4-6 digit number you both know.
-       Set to empty string '' to disable the PIN gate entirely. */
-    ACCESS_PIN: 'mknn2026',
+    /* PIN gate disabled — access is gated by Tailscale VPN */
+    ACCESS_PIN: '',
 
-    /* Message shown on the lock screen */
-    LOCK_MESSAGE: 'Enter PIN to access'
+    /* Message shown on the lock screen (if enabled) */
+    LOCK_MESSAGE: ''
 };

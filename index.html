@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>❤ Date Spot Database</title>
 
+    <!-- Preconnect for faster CDN & API loads -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://script.google.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://script.google.com">
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 
@@ -12,94 +20,62 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
 
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-    <!-- Lock Screen (PIN Gate - alphanumeric) -->
-    <div id="lock-screen" class="fixed inset-0 z-[9999] bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center transition-opacity duration-500">
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-[90%] max-w-sm shadow-2xl text-center">
-            <div class="text-5xl mb-3">❤️</div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Date Spot Database</h2>
-            <p id="lock-message" class="text-gray-500 dark:text-gray-400 text-sm mb-4"></p>
-
-            <!-- PIN display: shows each entered char in a box (tap to type) -->
-            <div id="pin-display" class="flex justify-center gap-2 mb-4 min-h-[48px] flex-wrap cursor-text">
-                <!-- built dynamically by JS -->
-            </div>
-            <!-- Hidden input to trigger mobile keyboard -->
-            <input type="text" id="pin-hidden-input"
-                class="absolute opacity-0 pointer-events-none" style="width:1px;height:1px;left:-9999px;"
-                inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-
-            <!-- Keypad -->
-            <div id="pin-pad-wrap">
-                <!-- built dynamically by JS -->
-            </div>
-
-            <!-- Bottom row: mode toggle + backspace + enter -->
-            <div class="flex gap-3 mt-3 max-w-[240px] mx-auto">
-                <button id="pin-mode" class="flex-1 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all">ABC</button>
-                <button id="pin-backspace" class="flex-1 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all">⌫</button>
-                <button id="pin-enter" class="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 active:scale-95 transition-all">✓ Enter</button>
-            </div>
-
-            <p id="pin-error" class="text-red-500 text-sm mt-4 hidden">Wrong PIN. Try again.</p>
-        </div>
+<body>
+    <!-- Animated Background Blobs -->
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
     </div>
-    <div id="app" class="h-screen flex flex-col">
+
+    <div id="app">
         <!-- Header -->
-        <header class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 pt-4 pb-3 shadow-lg flex items-center justify-between">
+        <header class="glass-header">
             <div>
-                <h1 class="text-xl font-bold leading-tight">❤ Date Spot Database</h1>
-                <p class="text-xs opacity-80">Find your next perfect date</p>
+                <h1 class="header-title">❤ Date Spot Database</h1>
+                <p class="header-subtitle">Find your next perfect date</p>
             </div>
-            <button id="dark-toggle" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-lg" title="Toggle dark mode">🌙</button>
+            <button id="dark-toggle" class="glass-btn glass-btn-sm" title="Toggle dark mode" style="padding:6px 10px;font-size:1rem;">🌙</button>
         </header>
 
-        <!-- Navigation Tabs (bottom on mobile, top on desktop) -->
-        <nav id="top-nav" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 sticky top-0 z-40 shadow-sm hidden md:flex">
-            <div class="flex gap-1 p-2 overflow-x-auto">
-                <button class="tab-btn active px-5 py-2.5 rounded-lg bg-red-500 text-white font-semibold text-sm transition-all" data-tab="map">🗺️ Map</button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm transition-all" data-tab="list">📋 List</button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg bg-green-500 text-white font-semibold text-sm transition-all ml-auto" data-tab="add">➕ Add Location</button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg bg-purple-500 text-white font-semibold text-sm transition-all" data-tab="stats">📊 Stats</button>
-            </div>
+        <!-- Top Navigation (Desktop) -->
+        <nav id="top-nav" class="glass-nav desktop-nav">
+            <button class="nav-btn active" data-tab="map">🗺 Map</button>
+            <button class="nav-btn" data-tab="list">📋 List</button>
+            <button class="nav-btn add-btn-active" data-tab="add">➕ Add</button>
+            <button class="nav-btn" data-tab="stats">📊 Stats</button>
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <main class="main-content">
             <!-- Map View -->
-            <div id="map-view" class="tab-content active w-full h-full relative">
-                <div id="map" class="w-full h-full"></div>
-                <div id="user-location-indicator" class="absolute bottom-4 right-4 bg-blue-500 text-white px-3 py-1.5 rounded-full shadow-lg text-sm hidden z-20">
-                    📍 You are here
-                </div>
-                <!-- Loading overlay for map -->
-                <div id="map-loading" class="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-50 hidden">
+            <div id="map-view" class="tab-content active">
+                <div id="map"></div>
+                <div id="user-location-indicator">📍 You are here</div>
+                <div id="map-loading">
                     <div class="text-center">
-                        <div class="animate-spin text-4xl mb-2">📍</div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
+                        <div class="iridescent-spinner" style="margin:0 auto 12px;"></div>
+                        <p style="color:var(--text-muted);font-size:0.85rem;">Loading map...</p>
                     </div>
                 </div>
             </div>
 
             <!-- List View -->
-            <div id="list-view" class="tab-content hidden w-full p-4 max-w-4xl mx-auto">
-                <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                    <div class="flex-1 relative">
-                        <input type="text" id="search-box" placeholder="🔍 Search by name, area, or category..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all" />
-                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            <div id="list-view" class="tab-content">
+                <div class="list-controls">
+                    <div class="search-wrap">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-box" class="glass-input" placeholder="Search by name, area, or category...">
                     </div>
-                    <select id="filter-status" class="px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
+                    <select id="filter-status" class="glass-select filter-select">
                         <option value="all">All Status</option>
                         <option value="Want to Go ⁉">Want to Go ⁉</option>
                         <option value="Been There ✅">Been There ✅</option>
                         <option value="Favorites ⭐">Favorites ⭐</option>
                     </select>
-                    <select id="filter-category" class="px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
+                    <select id="filter-category" class="glass-select filter-select">
                         <option value="all">All Categories</option>
                         <option value="☕ Cafe">☕ Cafe</option>
                         <option value="🍽️ Restaurant">🍽️ Restaurant</option>
@@ -109,297 +85,288 @@
                         <option value="🎬 Entertainment">🎬 Entertainment</option>
                     </select>
                 </div>
-                <div id="locations-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div id="locations-list" class="locations-grid">
                     <!-- Populated by JS -->
                 </div>
-                <div id="list-empty" class="hidden text-center py-12">
-                    <div class="text-5xl mb-3">🗺️</div>
-                    <p class="text-gray-500 dark:text-gray-400 text-lg">No locations found</p>
-                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Try adjusting your search or add your first date spot!</p>
+                <div id="list-empty">
+                    <div class="empty-icon">🗺️</div>
+                    <p class="empty-title">No locations found</p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;">Try adjusting your search or add your first date spot!</p>
                 </div>
             </div>
 
             <!-- Add Location Form -->
-            <div id="add-view" class="tab-content hidden w-full p-4 max-w-2xl mx-auto">
-                <form id="add-location-form" class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-                    <h2 class="text-2xl font-bold mb-1 text-red-500">Add New Date Spot ❤️</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Fill in the details below</p>
+            <div id="add-view" class="tab-content">
+                <!-- AI Add Button -->
+                <div class="ai-add-btn-wrap">
+                    <button id="ai-add-btn" class="ai-add-btn">
+                        <span class="sparkle">✨</span>
+                        <span>Add with AI</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">— describe a place</span>
+                    </button>
+                </div>
 
-                    <div class="space-y-4">
-                        <!-- Row: Name + Category -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Location Name <span class="text-red-500">*</span></label>
-                                <input type="text" id="f-name" required class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all" placeholder="e.g., Le Petit Chef">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Category <span class="text-red-500">*</span></label>
-                                <select id="f-category" required class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="">Select category</option>
-                                    <option value="☕ Cafe">☕ Cafe</option>
-                                    <option value="🍽️ Restaurant">🍽️ Restaurant</option>
-                                    <option value="🎡 Activity">🎡 Activity</option>
-                                    <option value="🌿 Nature">🌿 Nature</option>
-                                    <option value="🏨 Hotel">🏨 Hotel</option>
-                                    <option value="🎬 Entertainment">🎬 Entertainment</option>
-                                    <option value="🍸 Bar">🍸 Bar</option>
-                                    <option value="🏖️ Beach">🏖️ Beach</option>
-                                </select>
-                            </div>
-                        </div>
+                <form id="add-location-form" class="glass-card" style="padding:20px;">
+                    <h2 class="form-section-title">Add New Date Spot</h2>
+                    <p class="form-subtitle">Fill in the details below</p>
 
-                        <!-- Row: Address + Area -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Address <span class="text-red-500">*</span></label>
-                                <input type="text" id="f-address" required class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all" placeholder="Full address for geocoding">
-                                <div id="geocode-status" class="text-xs mt-1 hidden"></div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Area / District</label>
-                                <input type="text" id="f-area" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="e.g., Petaling Jaya">
-                            </div>
-                        </div>
-
-                        <!-- Row: Price + Hours -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Price Range <span class="text-red-500">*</span></label>
-                                <select id="f-price" required class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="">Select price</option>
-                                    <option value="RM0-50">RM0-50 💵</option>
-                                    <option value="RM50-100">RM50-100 💵💵</option>
-                                    <option value="RM100-200">RM100-200 💵💵💵</option>
-                                    <option value="RM200-300">RM200-300 💵💵💵💵</option>
-                                    <option value="RM300+">RM300+ 💵💵💵💵💵</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Opening Hours</label>
-                                <input type="text" id="f-hours" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="e.g., 10:00 - 22:00">
-                            </div>
-                        </div>
-
-                        <!-- Row: Best Time + Effort Level -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Best Time to Visit</label>
-                                <select id="f-bestTime" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="">Any time</option>
-                                    <option value="Morning ☀️">Morning ☀️</option>
-                                    <option value="Afternoon 🌤️">Afternoon 🌤️</option>
-                                    <option value="Evening 🌅">Evening 🌅</option>
-                                    <option value="Night 🌃">Night 🌃</option>
-                                    <option value="Weekday 🏢">Weekday 🏢</option>
-                                    <option value="Weekend 🎉">Weekend 🎉</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Effort Level</label>
-                                <select id="f-effort" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="Easy">Easy 🌱</option>
-                                    <option value="Medium">Medium 🌿</option>
-                                    <option value="Hard">Hard 🌳</option>
-                                    <option value="Booking Needed">Booking Needed 📞</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Vibe Tags -->
+                    <div class="form-grid">
+                        <!-- Name + Category -->
                         <div>
-                            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Vibe</label>
-                            <div id="vibe-tags" class="flex flex-wrap gap-2">
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Chill 😎">
-                                    <input type="checkbox" class="hidden" value="Chill 😎"> Chill 😎
+                            <label class="form-label">Location Name <span class="required">*</span></label>
+                            <input type="text" id="f-name" required class="glass-input" placeholder="e.g., Le Petit Chef">
+                        </div>
+                        <div>
+                            <label class="form-label">Category <span class="required">*</span></label>
+                            <select id="f-category" required class="glass-select">
+                                <option value="">Select category</option>
+                                <option value="☕ Cafe">☕ Cafe</option>
+                                <option value="🍽️ Restaurant">🍽️ Restaurant</option>
+                                <option value="🎡 Activity">🎡 Activity</option>
+                                <option value="🌿 Nature">🌿 Nature</option>
+                                <option value="🏨 Hotel">🏨 Hotel</option>
+                                <option value="🎬 Entertainment">🎬 Entertainment</option>
+                                <option value="🍸 Bar">🍸 Bar</option>
+                                <option value="🏖️ Beach">🏖️ Beach</option>
+                            </select>
+                        </div>
+
+                        <!-- Address + Area -->
+                        <div>
+                            <label class="form-label">Address <span class="required">*</span></label>
+                            <input type="text" id="f-address" required class="glass-input" placeholder="Full address for geocoding">
+                            <div id="geocode-status" class="hidden" style="font-size:0.72rem;margin-top:4px;"></div>
+                        </div>
+                        <div>
+                            <label class="form-label">Area / District</label>
+                            <input type="text" id="f-area" class="glass-input" placeholder="e.g., Petaling Jaya">
+                        </div>
+
+                        <!-- Price + Hours -->
+                        <div>
+                            <label class="form-label">Price Range <span class="required">*</span></label>
+                            <select id="f-price" required class="glass-select">
+                                <option value="">Select price</option>
+                                <option value="RM0-50">RM0-50 💵</option>
+                                <option value="RM50-100">RM50-100 💵💵</option>
+                                <option value="RM100-200">RM100-200 💵💵💵</option>
+                                <option value="RM200-300">RM200-300 💵💵💵💵</option>
+                                <option value="RM300+">RM300+ 💵💵💵💵💵</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Opening Hours</label>
+                            <input type="text" id="f-hours" class="glass-input" placeholder="e.g., 10:00 - 22:00">
+                        </div>
+
+                        <!-- Best Time + Effort Level -->
+                        <div>
+                            <label class="form-label">Best Time to Visit</label>
+                            <select id="f-bestTime" class="glass-select">
+                                <option value="">Any time</option>
+                                <option value="Morning ☀️">Morning ☀️</option>
+                                <option value="Afternoon 🌤️">Afternoon 🌤️</option>
+                                <option value="Evening 🌅">Evening 🌅</option>
+                                <option value="Night 🌃">Night 🌃</option>
+                                <option value="Weekday 🏢">Weekday 🏢</option>
+                                <option value="Weekend 🎉">Weekend 🎉</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Effort Level</label>
+                            <select id="f-effort" class="glass-select">
+                                <option value="Easy">Easy 🌱</option>
+                                <option value="Medium">Medium 🌿</option>
+                                <option value="Hard">Hard 🌳</option>
+                                <option value="Booking Needed">Booking Needed 📞</option>
+                            </select>
+                        </div>
+
+                        <!-- Vibe Tags (full width) -->
+                        <div class="form-full">
+                            <label class="form-label">Vibe</label>
+                            <div id="vibe-tags" class="vibe-tags">
+                                <label class="vibe-tag" data-value="Chill 😎">
+                                    <input type="checkbox" class="hidden"> Chill 😎
                                 </label>
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Romantic ❤️">
-                                    <input type="checkbox" class="hidden" value="Romantic ❤️"> Romantic ❤️
+                                <label class="vibe-tag" data-value="Romantic ❤️">
+                                    <input type="checkbox" class="hidden"> Romantic ❤️
                                 </label>
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Aesthetic 📸">
-                                    <input type="checkbox" class="hidden" value="Aesthetic 📸"> Aesthetic 📸
+                                <label class="vibe-tag" data-value="Aesthetic 📸">
+                                    <input type="checkbox" class="hidden"> Aesthetic 📸
                                 </label>
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Adventurous 🎯">
-                                    <input type="checkbox" class="hidden" value="Adventurous 🎯"> Adventurous 🎯
+                                <label class="vibe-tag" data-value="Adventurous 🎯">
+                                    <input type="checkbox" class="hidden"> Adventurous 🎯
                                 </label>
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Cozy 🏠">
-                                    <input type="checkbox" class="hidden" value="Cozy 🏠"> Cozy 🏠
+                                <label class="vibe-tag" data-value="Cozy 🏠">
+                                    <input type="checkbox" class="hidden"> Cozy 🏠
                                 </label>
-                                <label class="vibe-tag cursor-pointer px-3 py-1.5 rounded-full border-2 border-gray-300 dark:border-gray-600 text-sm transition-all" data-value="Lively 🎶">
-                                    <input type="checkbox" class="hidden" value="Lively 🎶"> Lively 🎶
+                                <label class="vibe-tag" data-value="Lively 🎶">
+                                    <input type="checkbox" class="hidden"> Lively 🎶
                                 </label>
                             </div>
                             <input type="hidden" id="f-vibe" value="">
                         </div>
 
-                        <!-- Sliders: Crowd + Privacy -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Crowd Level: <span id="crowdValue" class="text-red-500 font-bold">50</span>%</label>
-                                <input type="range" id="f-crowd" min="0" max="100" value="50" class="w-full accent-red-500">
-                                <div class="flex justify-between text-xs text-gray-400 mt-0.5">
-                                    <span>Quiet</span>
-                                    <span>Packed</span>
-                                </div>
+                        <!-- Crowd + Privacy sliders -->
+                        <div>
+                            <label class="form-label">Crowd Level: <span class="slider-value" id="crowdValue">50</span>%</label>
+                            <input type="range" id="f-crowd" min="0" max="100" value="50">
+                            <div class="slider-labels">
+                                <span>Quiet</span>
+                                <span>Packed</span>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Privacy Level: <span id="privacyValue" class="text-red-500 font-bold">50</span>%</label>
-                                <input type="range" id="f-privacy" min="0" max="100" value="50" class="w-full accent-red-500">
-                                <div class="flex justify-between text-xs text-gray-400 mt-0.5">
-                                    <span>Public</span>
-                                    <span>Private</span>
-                                </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Privacy Level: <span class="slider-value" id="privacyValue">50</span>%</label>
+                            <input type="range" id="f-privacy" min="0" max="100" value="50">
+                            <div class="slider-labels">
+                                <span>Public</span>
+                                <span>Private</span>
                             </div>
                         </div>
 
-                        <!-- Ratings -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Your Rating ⭐</label>
-                                <div class="star-rating" data-target="f-yourRating">
-                                    <span class="star" data-value="1">☆</span>
-                                    <span class="star" data-value="2">☆</span>
-                                    <span class="star" data-value="3">☆</span>
-                                    <span class="star" data-value="4">☆</span>
-                                    <span class="star" data-value="5">☆</span>
-                                </div>
-                                <input type="hidden" id="f-yourRating" value="0">
+                        <!-- Ratings + Date -->
+                        <div>
+                            <label class="form-label">Your Rating ⭐</label>
+                            <div class="star-rating" data-target="f-yourRating">
+                                <span class="star" data-value="1">☆</span>
+                                <span class="star" data-value="2">☆</span>
+                                <span class="star" data-value="3">☆</span>
+                                <span class="star" data-value="4">☆</span>
+                                <span class="star" data-value="5">☆</span>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Her Rating ⭐</label>
-                                <div class="star-rating" data-target="f-herRating">
-                                    <span class="star" data-value="1">☆</span>
-                                    <span class="star" data-value="2">☆</span>
-                                    <span class="star" data-value="3">☆</span>
-                                    <span class="star" data-value="4">☆</span>
-                                    <span class="star" data-value="5">☆</span>
-                                </div>
-                                <input type="hidden" id="f-herRating" value="0">
+                            <input type="hidden" id="f-yourRating" value="0">
+                        </div>
+                        <div>
+                            <label class="form-label">Her Rating ⭐</label>
+                            <div class="star-rating" data-target="f-herRating">
+                                <span class="star" data-value="1">☆</span>
+                                <span class="star" data-value="2">☆</span>
+                                <span class="star" data-value="3">☆</span>
+                                <span class="star" data-value="4">☆</span>
+                                <span class="star" data-value="5">☆</span>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Date Visited</label>
-                                <input type="date" id="f-dateVisited" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                            </div>
+                            <input type="hidden" id="f-herRating" value="0">
+                        </div>
+                        <div>
+                            <label class="form-label">Date Visited</label>
+                            <input type="date" id="f-dateVisited" class="glass-input" style="padding:8px 12px;">
                         </div>
 
                         <!-- URLs -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Website / Booking URL</label>
-                                <input type="url" id="f-url" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="https://...">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Google Photos Link</label>
-                                <input type="url" id="f-photosLink" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="https://photos.app.goo.gl/...">
-                            </div>
+                        <div>
+                            <label class="form-label">Website / Booking URL</label>
+                            <input type="url" id="f-url" class="glass-input" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="form-label">Google Photos Link</label>
+                            <input type="url" id="f-photosLink" class="glass-input" placeholder="https://photos.app.goo.gl/...">
                         </div>
 
                         <!-- Status + Revisit -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Status</label>
-                                <select id="f-status" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="Want to Go ⁉">Want to Go ⁉</option>
-                                    <option value="Been There ✅">Been There ✅</option>
-                                    <option value="Favorites ⭐">Favorites ⭐</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Could Revisit?</label>
-                                <select id="f-revisit" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
-                                    <option value="Yes">Yes ✅</option>
-                                    <option value="No">No ❌</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select id="f-status" class="glass-select">
+                                <option value="Want to Go ⁉">Want to Go ⁉</option>
+                                <option value="Been There ✅">Been There ✅</option>
+                                <option value="Favorites ⭐">Favorites ⭐</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Could Revisit?</label>
+                            <select id="f-revisit" class="glass-select">
+                                <option value="Yes">Yes ✅</option>
+                                <option value="No">No ❌</option>
+                            </select>
                         </div>
 
-                        <!-- Notes -->
-                        <div>
-                            <label class="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Notes</label>
-                            <textarea id="f-notes" class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400 h-24 resize-y" placeholder="Any tips, what to order, prices, parking tips..."></textarea>
+                        <!-- Notes (full width) -->
+                        <div class="form-full">
+                            <label class="form-label">Notes</label>
+                            <textarea id="f-notes" class="glass-textarea" placeholder="Any tips, what to order, prices, parking tips..."></textarea>
                         </div>
 
                         <!-- Hidden: coordinates -->
                         <input type="hidden" id="f-lat" value="">
                         <input type="hidden" id="f-lng" value="">
+                    </div>
 
-                        <!-- Buttons -->
-                        <div class="flex gap-3 justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <button type="button" class="clear-btn px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">Clear</button>
-                            <button type="submit" id="submit-btn" class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                                <span id="submit-text">Save Location ❤️</span>
-                                <span id="submit-spinner" class="hidden">
-                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                </span>
-                            </button>
-                        </div>
+                    <!-- Buttons -->
+                    <div class="form-buttons">
+                        <button type="button" class="clear-btn glass-btn" style="background:rgba(255,255,255,0.04);border-color:var(--glass-border);color:var(--text-secondary);">Clear</button>
+                        <button type="submit" id="submit-btn" class="glass-btn glass-btn-primary" style="display:flex;align-items:center;gap:8px;">
+                            <span id="submit-text">Save Location ❤️</span>
+                            <span id="submit-spinner" class="hidden">
+                                <svg class="iridescent-spinner" style="width:16px;height:16px;border-width:2px;" viewBox="0 0 24 24"></svg>
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
 
             <!-- Stats View -->
-            <div id="stats-view" class="tab-content hidden w-full p-4 max-w-4xl mx-auto">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <div class="stat-card bg-white dark:bg-gray-800 rounded-2xl p-4 shadow text-center border border-gray-200 dark:border-gray-700">
-                        <div class="text-3xl mb-1">📍</div>
-                        <div class="text-2xl font-bold text-red-500" id="stat-total">0</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Total Spots</div>
+            <div id="stats-view" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon">📍</div>
+                        <div class="stat-value iridescent" id="stat-total">0</div>
+                        <div class="stat-label">Total Spots</div>
                     </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 rounded-2xl p-4 shadow text-center border border-gray-200 dark:border-gray-700">
-                        <div class="text-3xl mb-1">✅</div>
-                        <div class="text-2xl font-bold text-green-500" id="stat-visited">0</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Visited</div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value green" id="stat-visited">0</div>
+                        <div class="stat-label">Visited</div>
                     </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 rounded-2xl p-4 shadow text-center border border-gray-200 dark:border-gray-700">
-                        <div class="text-3xl mb-1">⭐</div>
-                        <div class="text-2xl font-bold text-yellow-500" id="stat-avgRating">0</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Avg Rating</div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-value amber" id="stat-avgRating">0</div>
+                        <div class="stat-label">Avg Rating</div>
                     </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 rounded-2xl p-4 shadow text-center border border-gray-200 dark:border-gray-700">
-                        <div class="text-3xl mb-1">💰</div>
-                        <div class="text-2xl font-bold text-purple-500" id="stat-spent">RM0</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Est. Spent</div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value iridescent" id="stat-spent">RM0</div>
+                        <div class="stat-label">Est. Spent</div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-700">
-                    <h3 class="font-bold mb-3 text-gray-800 dark:text-gray-200">Category Breakdown</h3>
-                    <div id="stat-categories" class="space-y-2"></div>
+                <div class="category-breakdown glass-card">
+                    <h3>Category Breakdown</h3>
+                    <div id="stat-categories"></div>
                 </div>
             </div>
         </main>
 
         <!-- Bottom Navigation (Mobile) -->
-        <nav id="bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 z-50 shadow-lg">
-            <div class="flex justify-around py-1">
-                <button class="bottom-tab active flex flex-col items-center px-3 py-1.5 text-red-500" data-tab="map">
-                    <span class="text-xl">🗺️</span>
-                    <span class="text-[10px] font-semibold">Map</span>
-                </button>
-                <button class="bottom-tab flex flex-col items-center px-3 py-1.5 text-gray-500 dark:text-gray-400" data-tab="list">
-                    <span class="text-xl">📋</span>
-                    <span class="text-[10px] font-semibold">List</span>
-                </button>
-                <button class="bottom-tab flex flex-col items-center px-3 py-1.5 text-gray-500 dark:text-gray-400" data-tab="add">
-                    <span class="text-xl">➕</span>
-                    <span class="text-[10px] font-semibold">Add</span>
-                </button>
-                <button class="bottom-tab flex flex-col items-center px-3 py-1.5 text-gray-500 dark:text-gray-400" data-tab="stats">
-                    <span class="text-xl">📊</span>
-                    <span class="text-[10px] font-semibold">Stats</span>
-                </button>
-            </div>
+        <nav id="bottom-nav" class="glass-bottom-nav">
+            <button class="bottom-tab active" data-tab="map">
+                <span class="tab-icon">🗺️</span>
+                <span class="tab-label">Map</span>
+            </button>
+            <button class="bottom-tab" data-tab="list">
+                <span class="tab-icon">📋</span>
+                <span class="tab-label">List</span>
+            </button>
+            <button class="bottom-tab" data-tab="add">
+                <span class="tab-icon">➕</span>
+                <span class="tab-label">Add</span>
+            </button>
+            <button class="bottom-tab" data-tab="stats">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Stats</span>
+            </button>
         </nav>
 
         <!-- Footer -->
-        <footer class="hidden md:block bg-gray-100 dark:bg-gray-800 border-t dark:border-gray-700 p-3 text-center text-xs text-gray-500 dark:text-gray-400">
-            <div class="flex gap-4 justify-center items-center flex-wrap">
-                <button id="export-btn" class="text-blue-500 hover:text-blue-600 font-medium">📥 Export Data</button>
-                <button id="import-btn" class="text-blue-500 hover:text-blue-600 font-medium">📤 Import Data</button>
-                <input type="file" id="import-file" accept=".json,.csv" hidden>
-                <span class="hidden sm:inline">|</span>
-                <span>Data stored locally • Free & Open Source</span>
-            </div>
+        <footer class="glass-footer">
+            <button id="export-btn" class="glass-btn glass-btn-sm" style="padding:4px 12px;font-size:0.72rem;">📥 Export</button>
+            <button id="import-btn" class="glass-btn glass-btn-sm" style="padding:4px 12px;font-size:0.72rem;">📤 Import</button>
+            <input type="file" id="import-file" accept=".json,.csv" hidden>
+            <span style="color:var(--text-muted);">|</span>
+            <span>Data stored locally · Free & Open Source</span>
         </footer>
     </div>
+
+    <!-- AI Modal (populated dynamically) -->
 
     <!-- Leaflet + MarkerCluster -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
