@@ -228,11 +228,9 @@ const App = {
     /* ---- Called from map popup button ---- */
     selectLocation(id) {
         const loc = Storage.get(id);
-        if (loc && loc.lat && loc.lng) {
-            this.switchTab('map');
-            MapManager.flyTo(loc.lat, loc.lng);
-            const marker = MapManager.markers[id];
-            if (marker) marker.openPopup();
+        if (loc) {
+            this.switchTab('add');
+            FormManager.editLocation(loc);
         }
     },
 

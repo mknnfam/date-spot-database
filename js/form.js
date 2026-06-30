@@ -87,9 +87,9 @@ const FormManager = {
                     <span>✨</span>
                     <span>Add with AI</span>
                 </div>
-                <p class="modal-desc">Describe the place you want to add. AI will find the details and pre-fill the form.</p>
+                <p class="modal-desc">Describe the place you want to add, or paste an <strong>Instagram link</strong> to scrape location info.</p>
                 <div class="modal-input-wrap">
-                    <input type="text" id="ai-query-input" class="glass-input" placeholder='e.g., "cafe in Bangsar" or "romantic restaurant near KLCC"' autofocus>
+                    <input type="text" id="ai-query-input" class="glass-input" placeholder='e.g., "cafe in Bangsar" or paste an Instagram URL' autofocus>
                 </div>
                 <button id="ai-submit-btn" class="glass-btn glass-btn-primary" style="width:100%;padding:12px;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:8px;">
                     <span>✨ Look Up</span>
